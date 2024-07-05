@@ -12,241 +12,205 @@ pip install python-docx
 import os
 from docx import Document
 
-TXT_FILE = "txt"
-DOCX_FILE = "docx"
+import os
 
-def get_file_extension(ruta_archivo):
+def read_text(file_path):
     """
-    Obtiene la extensión de un archivo a partir de su ruta.
+    Reads the content from a text file or document.
 
     Args:
-    - file_path (str): Ruta del archivo del cual se desea obtener la extensión.
+    - file_path (str): Path to the file to read
 
     Returns:
-    - str: Extensión del archivo en minúsculas.
+    - str: Content of the file
+
+    Raises:
+    - ValueError: If the file format is not supported
     """
-    return ruta_archivo.split('.')[-1].lower()
-
-def create_file(ruta_archivo, contenido):
-    """
-    Crea un nuevo archivo en la ruta especificada y escribe el contenido proporcionado.
-
-    Args:
-    - ruta_archivo (str): Ruta del archivo a crear.
-    - contenido (str): Contenido que se escribirá en el archivo.
-
-    Returns:
-    - None
-    """
-    with open(ruta_archivo, 'w') as file:
-        file.write(contenido)
-
-
-def read_file(ruta_archivo):
-    """
-     lee el contenido de un archivo 'ruta_archivo'
-
-     Args:
-     - ruta_archivo (str): ruta del archivo a leer
-
-     Retorna:
-     - str: contenido el archivo como un string
-
-     Raises:
-     - FileNotFoundError: si el archivo 'ruta_archivo' no existe
-     """
-    if not os.path.exists(ruta_archivo):
-        raise FileNotFoundError(f"File '{ruta_archivo}' not found.")
-
-    file_extension = get_file_extension(ruta_archivo)
-    if file_extension == TXT_FILE:
-        with open(ruta_archivo, 'r') as file:
+    extension = file_path.split('.')[-1].lower()
+    if extension == 'txt':
+        with open(file_path, 'r') as file:
             return file.read()
-    elif file_extension == DOCX_FILE:
-        doc = Document(ruta_archivo)
-        return "\n".join([para.text for para in doc.paragraphs])
+    elif extension == 'doc':
+        doc = Document(file_path)
+        return '\n'.join([para.text for para in doc.paragraphs])
     else:
         raise ValueError("Unsupported file format")
 
-def update_file(ruta_archivo, new_contenido):
+def write_file(path_file, content):
     """
-    actualiza el contenido de un archivo existente en la ruta especificada
+    Writes content to a file.
 
     Args:
-    - ruta_archivo (str): ruta del archivo a actualizar
-    - new_contenido (str): nuevo contenido que se escribirá en el archivo
+    - path_file (str): Path to the file to write
+    - content (str): Content to write to the file
+    """
+    with open(path_file, 'w') as file:
+        file.write(content)
+
+def delete_file(path_file):
+    """
+    Deletes a file.
+
+    Args:
+    - path_file (str): Path to the file to delete
+    """
+    os.remove(path_file)
+
+def create_file(path_file):
+    """
+    Creates a new file.
+
+    Args:
+    - path_file (str): Path to the file to create
+    """
+    with open(path_file, 'w'):
+        pass
+
+def common_substring_search(str1, str2):
+    """
+    Finds the longest common substring between two strings.
+
+    Args:
+    - str1 (str): First string
+    - str2 (str): Second string
 
     Returns:
-    - None
+    - str: Longest common substring
     """
-    with open(ruta_archivo, 'w') as file:
-        file.write(new_contenido)
+    n = len(str1)
+    m = len(str2)
+    result = 0
+    end = 0
 
-def delete_file(ruta_archivo):
-    """
-    elimina un archivo especificado por la ruta del archivo
+    length = [[0] * (m + 1) for _ in range(n + 1)]
 
-    Args:
-    - ruta_archivo (str): ruta del archivo a eliminar
+    for i in range(1, n + 1):
+        for j in range(1, m + 1):
+            if str1[i - 1] == str2[j - 1]:
+                length[i][j] = length[i - 1][j - 1] + 1
+                if length[i][j] > result:
+                    result = length[i][j]
+                    end = i - 1
 
-    Returns:
-    - None
-    """
-    os.remove(ruta_archivo)
-
-def longest_common_substring(X, Y):
-    """
-    Encuentra el substring común más largo entre los strings X e Y
-
-    Args:
-    - X (str): Primer string
-    - Y (str): Segundo string
-
-    Retorna:
-    - str: substring común mas largo encontrado
-    """
-    m = len(X)
-    n = len(Y)
-    dp = [[0] * (n + 1) for _ in range(2)]
-    length = 0
-    end_index = 0
-    for i in range(1, m + 1):
-        for j in range(1, n + 1):
-            if X[i - 1] == Y[j - 1]:
-                dp[1][j] = dp[0][j - 1] + 1
-                if dp[1][j] > length:
-                    length = dp[1][j]
-                    end_index = i
-            else:
-                dp[1][j] = 0
-        dp[0] = dp[1][:]
-    start_index = end_index - length
-    longest_substring = X[start_index:end_index]
-    return f'The longest common substring is "{longest_substring}" and is of length {length}.'
+    return str1[end - result + 1:end + 1]
 
 def word_break(s, word_dict):
     """
-    Checkea si 's' puede ser segmentado en palabras del diccionario 'word_dict'
+    Determines if a string can be segmented into valid words using a given dictionary.
 
     Args:
-    - s (str): Input string a ser segmentado
-    - word_dict (dict): conjuntos de palabras en el diccionario
+    - s (str): Input string to be segmented
+    - word_dict (set): Set of valid words
 
-    Retorna:
-    - bool: True si 's' puede ser segmentado en palabras de 'word_dict', falso sino
+    Returns:
+    - bool: True if the string can be segmented into valid words, False otherwise
     """
     dp = [False] * (len(s) + 1)
     dp[0] = True
+
     for i in range(1, len(s) + 1):
         for j in range(i):
             if dp[j] and s[j:i] in word_dict:
                 dp[i] = True
                 break
+            # Check if substring has a common substring with a suffix
+            elif common_substring_search(s[j:i], s[i:]):
+                dp[i] = True
+                break
+
     return dp[-1]
 
-def word_wrap(words, maxWidth):
+
+def word_wrap_dp(text, max_length):
     """
-    Implementa al algoritno word_wrap utilizando programación dinámica
+    Wraps text into lines of a specified maximum length using dynamic programming,
+    with adjustments based on common substrings between words.
 
     Args:
-    - words (list): lista de palabras para ser ajustadas
-    - maxWidth (int): ancho máximo permitido para cada línea
+    - text (str): Input text to be wrapped
+    - max_length (int): Maximum length of each line
 
     Returns:
-    - list: índices de palabras donde se deben realizar los saltos de línea optimizados
-    """
-    n = len(words)
-    cost = [[0 for _ in range(n)] for _ in range(n)]
-    for i in range(n):
-        cost[i][i] = maxWidth - len(words[i])
-        for j in range(i + 1, n):
-            cost[i][j] = cost[i][j - 1] - len(words[j]) - 1
-    for i in range(n):
-        for j in range(i, n):
-            if cost[i][j] < 0:
-                cost[i][j] = float('inf')
-            else:
-                cost[i][j] = cost[i][j] ** 2
-    min_cost = [0] * n
-    result = [0] * n
-    for i in range(n - 1, -1, -1):
-        min_cost[i] = cost[i][n - 1]
-        result[i] = n
-        for j in range(n - 1, i, -1):
-            if cost[i][j - 1] == float('inf'):
-                continue
-            if min_cost[i] > min_cost[j] + cost[i][j - 1]:
-                min_cost[i] = min_cost[j] + cost[i][j - 1]
-                result[i] = j
-    return result
-
-def format_text(text: str, maxWidth: int):
-    """
-    Formatea el texto para que cada línea tenga como máximo 'maxWidth' caracteres
-
-    Args:
-    -text (str): texto a formatear
-    - maxWidth (int): ancho máximo permitido para cada línea
-
-    Returns:
-    -list : lista para líneas formateadas
+    - list of str: Wrapped text lines
     """
     words = text.split()
-    line_breaks = word_wrap(words, maxWidth)
+    n = len(words)
+    dp = [float('inf')] * (n + 1)
+    dp[0] = 0
+    result = [-1] * (n + 1)
+
+    for i in range(1, n + 1):
+        length = -1
+        for j in range(i, 0, -1):
+            length += len(words[j - 1]) + 1
+            if length > max_length:
+                break
+            if dp[j - 1] + (max_length - length + 1) ** 2 < dp[i]:
+                dp[i] = dp[j - 1] + (max_length - length + 1) ** 2
+                result[i] = j - 1
+
     lines = []
-    i = 0
-    while i < len(words):
-        current_line = words[i:line_breaks[i]]
-        lines.append(current_line)
-        i = line_breaks[i]
+    i = n
+    while i > 0:
+        j = result[i]
+        lines.append(' '.join(words[j:i]))
+        i = j
+
+    lines.reverse()
+    return lines
+
+def format_text(text, max_length):
     """
-    Justifica una línea de texto para que tenga un ancho máximo `maxWidth`.
+    Formats text into justified lines of a specified maximum length.
 
     Args:
-    - line (list): Lista de palabras que forman la línea.
+    - text (str): Input text to be formatted
+    - max_length (int): Maximum length of each line
 
     Returns:
-    - str: Línea justificada con espacios adicionales distribuidos uniformemente entre las palabras.
+    - list of str: Justified text lines
     """
-    def justify_line(line):
-        if len(line) == 1:
-            return line[0].ljust(maxWidth)
-        total_spaces = maxWidth - sum(len(word) for word in line)
-        spaces = [' '] * (len(line) - 1)
-        for i in range(total_spaces):
-            spaces[i % len(spaces)] += ' '
-        return ''.join(word + space for word, space in zip(line, spaces + ['']))
-    result = [justify_line(line) for line in lines[:-1]]
-    last_line = ' '.join(lines[-1]).ljust(maxWidth)
-    result.append(last_line)
-    return result
+    words = text.split()
 
+    # Check if the text can be segmented into valid words
+    word_dict = set(words)  # Assume all words in text are valid
+    if not word_break(text.replace(" ", ""), word_dict):
+        return ["Text cannot be segmented into valid words with the provided dictionary."]
 
-def process_file(ruta_archivo):
-    """
-    Procesa un archivo especificado por 'ruta_archivo', realizando las operaciones requeridas
+    # Perform word wrapping and formatting
+    formatted_lines = word_wrap_dp(text, max_length)
 
-    Args:
-    - ruta_archivo (str): ruta del archivo a procesar
-    """
-    contenido = read_file(ruta_archivo)
+    # Justify each line
+    justified_lines = []
+    for line in formatted_lines:
+        words_in_line = line.split()
+        if len(words_in_line) == 1:
+            justified_lines.append(words_in_line[0].ljust(max_length))
+        else:
+            total_spaces_needed = max_length - sum(len(word) for word in words_in_line)
+            if len(words_in_line) > 1:
+                min_spaces_between_words = total_spaces_needed // (len(words_in_line) - 1)
+                extra_spaces = total_spaces_needed % (len(words_in_line) - 1)
 
-    # Longest Common Substring  (asumiendo que necesitamos comparar dos partes del mismo texto, por ejemplo)
-    lcs_result = longest_common_substring(contenido[:len(contenido)//2], contenido[len(contenido)//2:])
-    print(lcs_result)
+                justified_line = words_in_line[0]
+                for i in range(1, len(words_in_line)):
+                    spaces_to_add = min_spaces_between_words + (1 if i <= extra_spaces else 0)
+                    justified_line += ' ' * spaces_to_add + words_in_line[i]
 
-    # Word Break (asumiendo que se proporciona un diccionario de muestra)
-    word_dict = {"this", "is", "a", "sample", "dictionary", "dynamic", "programming"}
-    wb_result = word_break(contenido, word_dict)
-    print(f'Can the content be segmented into words from the dictionary? {wb_result}')
+                justified_lines.append(justified_line)
 
-    # Word Wrap (asumiendo que se proporciona un maxWidth)
-    maxWidth = 30
-    wrapped_text = format_text(contenido, maxWidth)
-    print("Formatted Text:")
-    for line in wrapped_text:
-        print(f'"{line}"')
+    return justified_lines
+
+# Example usage
+text = "This is a programming problem which demonstrates dynamic programming"
+max_length = 15
+
+formatted_text = format_text(text, max_length)
+for line in formatted_text:
+    print(f"'{line}'")
 
 # Ejemplo con un archivo de texto genérico
-ruta_archivo = "text.txt"
-process_file(ruta_archivo)
+text = read_text("text.txt")
+maxWidth = 15
+print(format_text(text, maxWidth))
